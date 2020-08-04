@@ -27,11 +27,14 @@ BG_IMG = pygame.image.load(os.path.join("imgs", "bg.png"))
 
 STAT_FONT = pygame.font.SysFont("comicsans", 35)
 
+ROUND = 1
 
 class Ball:
     IMG = BALL_IMG
-    X_VEL = 4
-    Y_VEL = 4
+    WIDTH = BALL_IMG.get_width()
+    HEIGHT = BALL_IMG.get_height()
+    X_VEL = 7
+    Y_VEL = 7
 
     def __init__(self, x, y):
         self.x = x
@@ -49,7 +52,7 @@ class Ball:
             self.X_VEL = self.X_VEL * -1
         elif self.y < 0:
             self.Y_VEL = self.Y_VEL * -1
-        elif self.y > 682:
+        elif self.y > 700:
             run = False
             pygame.quit()
             quit()
@@ -79,7 +82,7 @@ class Ball:
 
 
 class Paddle:
-    VEL = 6
+    VEL = 10
     WIDTH = PADDLE_IMG.get_width()
     IMG = PADDLE_IMG
 
@@ -91,8 +94,7 @@ class Paddle:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] and self.x > 0:
             self.x -= self.VEL
-
-        if keys[pygame.K_RIGHT] and self.x < 1182 - self.WIDTH:
+        if keys[pygame.K_RIGHT] and self.x < 1200 - self.WIDTH:
             self.x += self.VEL
 
     def draw(self, win):
@@ -110,8 +112,8 @@ class Tile:
 
     def __init__(self, x, y):
         self.x = x
-        self.y = x
-        self.density = 11
+        self.y = y
+        self.density = ROUND
         self.img = self.IMGS[0]
 
     def draw(self, win):
@@ -137,13 +139,13 @@ class Tile:
 
 
 
-def draw_window(win, score, ball, round, paddle, tiles):
+def draw_window(win, score, ball, ROUND, paddle, tiles):
     win.blit(BG_IMG, (0,0))
 
     text = STAT_FONT.render("Score: " + str(score), 1,(255,255,255))
     win.blit(text, (WIN_WIDTH - 10 - text.get_width(), 10))
 
-    text = STAT_FONT.render("Round: " + str(round), 1,(255,255,255))
+    text = STAT_FONT.render("Round: " + str(ROUND), 1,(255,255,255))
     win.blit(text, (10, 10))
 
 
@@ -156,15 +158,16 @@ def draw_window(win, score, ball, round, paddle, tiles):
 
 
 def main():
+    global ROUND
     win = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGTH))
     clock = pygame.time.Clock()
     score = 0
-    round = 1
-    ball = Ball(900, 100)
+    ball = Ball(400, 400)
     paddle = Paddle(600, 665)
-    tiles = [Tile(100, 100)]
-    WIDTH = TILE_IMG.get_width()
-    HEIGHT = TILE_IMG.get_height()
+    tiles = []
+    for i in range(19):
+        for j in range(5):
+            tiles.append(Tile(30 + (60 * i), 100 + (30 * j)))
 
     run = True
     while run:
@@ -176,23 +179,30 @@ def main():
                 quit()
 
 
-
-
+        add_tile = False
+        rem = []
         for tile in tiles:
+
             if ball.collide(paddle, tile) == 1:
                 ball.Y_VEL = ball.Y_VEL * -1
             elif ball.collide(paddle, tile) == 2:
                 ball.Y_VEL = ball.Y_VEL * -1
                 score += 1
+                tile.density -= 1
 
-            if len(tiles) < 10:
-                for i in range(10):
-                    tiles.append(Tile(450 + WIDTH, 100))
+            if tile.density == 0:
+                rem.append(tile)
+
+        for r in rem:
+            tiles.pop(r)
 
 
+
+#            if tile.density < ROUND:
+#                tile.density += ROUND
 
         paddle.move()
         ball.move()
-        draw_window(win, score, ball, round, paddle, tiles)
+        draw_window(win, score, ball, ROUND, paddle, tiles)
 
 main()
